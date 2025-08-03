@@ -19,7 +19,7 @@ services:
       - "15001:15001"
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
-    command: /usr/local/bin/envoy -c /etc/envoy/envoy.yaml --service-cluster proxy
+    command: /usr/local/bin/envoy -c /etc/envoy/envoy.yaml --service-cluster proxy -l warning
     networks:
       - xds-net
     depends_on:
