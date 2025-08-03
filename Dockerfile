@@ -6,7 +6,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Install Buf CLI and necessary build dependencies
 RUN apt-get update && \
     apt-get install -y netcat-openbsd curl && \
-    curl -sSL https://github.com/bufbuild/buf/releases/download/v1.30.0/buf-$(uname -s)-$(uname -m) -o /usr/local/bin/buf && \
+    curl -sSL https://github.com/bufbuild/buf/releases/download/v1.50.0/buf-$(uname -s)-$(uname -m) -o /usr/local/bin/buf && \
     chmod +x /usr/local/bin/buf && \
     rm -rf /var/lib/apt/lists/*
 
