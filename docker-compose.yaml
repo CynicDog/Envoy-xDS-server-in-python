@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  xds-server:
+    build: .
+    container_name: xds-server
+    ports:
+      - "5678:5678"
+
+  envoy:
+    image: envoyproxy/envoy:v1.19.0
+    container_name: envoy
+    depends_on:
+      - xds-server
+      - httpbin
+    ports:
+      - "15001:15001"
+      - "15000:15000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    command: ["envoy", "-c", "/etc/envoy/envoy.yaml", "--log-level", "debug"]
+
+  httpbin:
+    image: citizenstig/httpbin
+    container_name: httpbin

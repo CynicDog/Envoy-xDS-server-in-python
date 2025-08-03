@@ -1,0 +1,11 @@
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/python
+    out: ./gen
+    include_imports: true
+  - remote: buf.build/protocolbuffers/pyi
+    out: ./gen
+    include_imports: true
+  - remote: buf.build/grpc/python:v1.74.0
+    out: gen
+    include_imports: true
