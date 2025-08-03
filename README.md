@@ -1,6 +1,6 @@
 # xDS-server-in-python
 
-This project demonstrates a simple xDS (Aggregated Discovery Service) server written in Python. It's designed to configure an Envoy proxy dynamically, directing incoming requests to an `httpbin` service. The setup includes three containers: an **xDS server**, an **Envoy proxy**, and a backend **httpbin** service.
+This project demonstrates a simple xDS server written in Python. It's designed to configure an Envoy proxy dynamically, directing incoming requests to an `httpbin` service. The setup includes three containers: an **xDS server**, an **Envoy proxy**, and a backend **httpbin** service.
 
 ## What it Does
 
@@ -13,24 +13,6 @@ The core logic of the project is to serve three key configuration types:
 * **RDS (Route Discovery Service)**: Defines the routing rules, specifying that all incoming requests (`/`) should be forwarded to the `httpbin_service` cluster.
 
 The xDS protocol aggregates these services into a single stream, allowing the Envoy proxy to receive all necessary configurations through one continuous gRPC connection.
-
-## Brief Explanations
-
-### xDS (eXtended Discovery Service)
-
-**xDS** is the collective name for a set of discovery APIs used by the Envoy proxy to obtain dynamic configurations from a management server. This allows for live updates to the proxy's behavior without requiring a full restart. The letter 'x' is a placeholder for the different types of discovery services, such as LDS, CDS, and RDS.
-
-### LDS (Listener Discovery Service)
-
-The **LDS** is responsible for defining **Listeners**. A listener is a named network location (e.g., an IP address and port) that Envoy binds to, accepting incoming connections. LDS configuration dictates how Envoy should handle these connections, including which filter chains and network filters (like the HTTP Connection Manager) to apply.
-
-### CDS (Cluster Discovery Service)
-
-The **CDS** is responsible for defining **Clusters**. A cluster is a logical grouping of identical upstream hosts. CDS tells Envoy about the existence of these upstream services, their load balancing policy, and other connection properties.
-
-### RDS (Route Discovery Service)
-
-The **RDS** is responsible for defining **Routes**. A route table contains rules that match incoming requests and determine which cluster the traffic should be forwarded to. RDS allows the dynamic configuration of these routing rules, enabling advanced traffic management techniques like A/B testing and canary deployments.
 
 ## Test Yourself\!
 
