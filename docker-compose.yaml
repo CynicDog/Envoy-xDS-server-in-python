@@ -1,25 +1,37 @@
-version: "3.9"
-
 services:
   xds-server:
+    image: xds-server:latest
     build: .
-    container_name: xds-server
     ports:
       - "5678:5678"
+    networks:
+      - xds-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "5678"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
 
-  envoy:
+  proxy:
     image: envoyproxy/envoy:v1.19.0
-    container_name: envoy
-    depends_on:
-      - xds-server
-      - httpbin
     ports:
-      - "15001:15001"
       - "15000:15000"
+      - "15001:15001"
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
-    command: ["envoy", "-c", "/etc/envoy/envoy.yaml", "--log-level", "debug"]
+    command: /usr/local/bin/envoy -c /etc/envoy/envoy.yaml --service-cluster proxy
+    networks:
+      - xds-net
+    depends_on:
+      xds-server:
+        condition: service_healthy
 
   httpbin:
     image: citizenstig/httpbin
-    container_name: httpbin
+    ports:
+      - "8000:80"
+    networks:
+      - xds-net
+
+networks:
+  xds-net:
