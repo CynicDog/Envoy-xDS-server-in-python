@@ -1,4 +1,4 @@
-# xDS-server-in-python
+# Envoy-xDS-server-in-python
 
 This project demonstrates a simple xDS server written in Python. It's designed to configure an Envoy proxy dynamically, directing incoming requests to an `httpbin` service. The setup includes three containers: an **xDS server**, an **Envoy proxy**, and a backend **httpbin** service.
 
