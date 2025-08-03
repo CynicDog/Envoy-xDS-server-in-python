@@ -29,4 +29,4 @@ WORKDIR /app
 ENV PYTHONPATH=/app/proto/gen
 ENV PYTHONUNBUFFERED=1
 
-CMD ["uv", "run", "--no-build-isolation", "xds_server.py"]
+CMD ["python", "xds_server.py"]
