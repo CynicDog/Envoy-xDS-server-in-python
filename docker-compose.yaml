@@ -1,6 +1,6 @@
 services:
   xds-server:
-    image: ghcr.io/cynicdog/envoy-xds-server-in-python:main
+    image: ghcr.io/cynicdog/envoy-xds-server-in-python:latest
     ports:
       - "5678:5678"
     networks:
