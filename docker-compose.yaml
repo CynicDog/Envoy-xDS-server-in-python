@@ -1,7 +1,6 @@
 services:
   xds-server:
     image: ghcr.io/cynicdog/xds-server-in-python:main
-    build: .
     ports:
       - "5678:5678"
     networks:
