@@ -27,7 +27,7 @@ To see the project in action, follow these simple steps.
 2.  Run a `curl` command to send a request to the Envoy proxy on port `15001`. The proxy will then use its dynamically configured rules to forward the request to the `httpbin` service.
 
     ```bash
-    docker run --rm --network xds-server-in-python_xds-net curlimages/curl curl -v http://xds-server-in-python-proxy-1:15001/headers
+    docker run --rm --network envoy-xds-server-in-python_xds-net curlimages/curl curl -v http://envoy-xds-server-in-python-proxy-1:15001/headers
     ```
 
 ### Expected Result
