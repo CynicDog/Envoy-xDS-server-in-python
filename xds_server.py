@@ -229,16 +229,22 @@ class XdsServer(ads_pb2_grpc.AggregatedDiscoveryServiceServicer):
         )
 
     def StreamAggregatedResources(self, request_iterator, context):
+        """
+        The main gRPC stream handler for all xDS requests.
+
+        This version correctly implements the ACK/NACK flow by only yielding a
+        DiscoveryResponse when a version change is detected or on a NACK.
+        """
         for request in request_iterator:
             type_url = request.type_url
             envoy_known_version = request.version_info
             node_id = request.node.id
-
             is_nack = request.HasField('error_detail')
 
-            # Initialize variables to avoid errors.
-            version_info, nonce = self.config_snapshot.get_version_info(type_url)
-            resource_obj = self.config_snapshot.resources.get(type_url)
+            # FIX: Call get_version_info for version/nonce and get the resource separately.
+            # This prevents the unpacking error.
+            server_version, server_nonce = self.config_snapshot.get_version_info(type_url)
+            server_resource = self.config_snapshot.resources.get(type_url)
 
             # Log initial requests and NACKs for visibility.
             if is_nack or envoy_known_version == "":
@@ -248,38 +254,46 @@ class XdsServer(ads_pb2_grpc.AggregatedDiscoveryServiceServicer):
                     error_detail_message = request.error_detail.message
                     print(f"  *** Envoy NACKed previous config: '{error_detail_message}' ***")
 
-            # On an initial request or ACK, regenerate the config and update the snapshot.
-            if not is_nack:
-                if type_url == "type.googleapis.com/envoy.config.listener.v3.Listener":
-                    listener = generate_listener_config()
-                    version_info, nonce, resource_obj = self.config_snapshot.update_snapshot(type_url, listener)
+            # Check if we should send a new response.
+            # This happens if:
+            # 1. Envoy sends an initial empty version_info.
+            # 2. Envoy's version is different from our server's version (meaning we have a new config).
+            # 3. Envoy sent a NACK (error_detail is populated).
+            should_send_response = (envoy_known_version == "" or server_version != envoy_known_version or is_nack)
 
-                elif type_url == "type.googleapis.com/envoy.config.cluster.v3.Cluster":
-                    cluster = generate_cluster_config()
-                    version_info, nonce, resource_obj = self.config_snapshot.update_snapshot(type_url, cluster)
+            if should_send_response:
+                # On an initial request or ACK, regenerate the config and update the snapshot.
+                if not is_nack:
+                    # The snapshot update logic is correct; it only increments version
+                    # if the config hash has changed.
+                    if type_url == "type.googleapis.com/envoy.config.listener.v3.Listener":
+                        listener = generate_listener_config()
+                        server_version, server_nonce, server_resource = self.config_snapshot.update_snapshot(type_url, listener)
+                    elif type_url == "type.googleapis.com/envoy.config.cluster.v3.Cluster":
+                        cluster = generate_cluster_config()
+                        server_version, server_nonce, server_resource = self.config_snapshot.update_snapshot(type_url, cluster)
 
-                else:
-                    print(f"[{time.time():.3f}] Received unsupported type_url: {type_url}. Sending empty response.")
+                # Build the response resources list based on the latest state.
+                resources_to_send = []
+                if server_resource:
+                    resource = any_pb2.Any()
+                    resource.Pack(server_resource)
+                    resources_to_send.append(resource)
 
-            # Build the response resources list based on the latest state.
-            resources_to_send = []
-            if resource_obj:
-                resource = any_pb2.Any()
-                resource.Pack(resource_obj)
-                resources_to_send.append(resource)
+                print(f"  Serving config with server version: '{server_version}', response nonce: '{server_nonce}'")
 
-            # Log the response details if a change was made or a NACK occurred.
-            if is_nack or (version_info != envoy_known_version):
-                print(f"  Serving config with server version: '{version_info}', response nonce: '{nonce}'")
-
-            # Always yield a response to keep the gRPC stream open.
-            response = discovery_pb2.DiscoveryResponse(
-                version_info=version_info,
-                resources=resources_to_send,
-                type_url=type_url,
-                nonce=nonce
-            )
-            yield response
+                # Yield the response ONLY when a change is needed.
+                response = discovery_pb2.DiscoveryResponse(
+                    version_info=server_version,
+                    resources=resources_to_send,
+                    type_url=type_url,
+                    nonce=server_nonce
+                )
+                yield response
+            else:
+                # If the versions match and there is no NACK, we do nothing and wait for the next request.
+                # This is the key change to stop the continuous churn.
+                print(f"[{time.time():.3f}] Received {type_url} ACK. Versions match ('{server_version}'). No new config to send.")
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
