@@ -12,7 +12,7 @@ services:
       retries: 10
 
   proxy:
-    image: envoyproxy/envoy:v1.19.0
+    image: envoyproxy/envoy:v1.30.0
     ports:
       - "15000:15000"
       - "15001:15001"
