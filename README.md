@@ -2,6 +2,8 @@
 
 This project demonstrates a simple xDS server written in Python. It's designed to configure an Envoy proxy dynamically, directing incoming requests to an `httpbin` service. The setup includes three containers: an **xDS server**, an **Envoy proxy**, and a backend **httpbin** service.
 
+I wrote an article about this project at [Building an xDS Control Plane in Python: Embracing Dynamic Networking](https://cynicdog.github.io/posts/building-xds-control-plane-python-embracing-dynamic-networking/)
+
 ## What it Does
 
 The Python xDS server acts as the control plane, providing dynamic configuration to the Envoy proxy (the data plane). When a user sends a request to the proxy, it uses the configuration received from the xDS server to route the request to the correct upstream service, in this case, `httpbin`.
